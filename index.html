@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SHEILD System - Personal Safety Project</title>
+    <title>SHEild - A Women Safety Application Using IOT Device</title>
     <style>
         :root {
             --primary: #3f51b5;
             --primary-light: #757de8;
             --primary-dark: #002984;
             --secondary: #f44336;
+            --success: #4caf50;
             --text: #212121;
             --text-light: #757575;
             --background: #f5f5f5;
@@ -27,6 +28,7 @@
             background-color: var(--background);
             color: var(--text);
             line-height: 1.6;
+            scroll-behavior: smooth;
         }
         
         header {
@@ -35,6 +37,23 @@
             padding: 2rem 0;
             text-align: center;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .header-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            z-index: 1;
         }
         
         .container {
@@ -60,12 +79,38 @@
             margin: 0 auto;
         }
         
+        .zoom-controls {
+            display: flex;
+            justify-content: center;
+            margin: 1rem 0;
+            gap: 1rem;
+        }
+        
+        .zoom-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .zoom-btn:hover {
+            background-color: var(--primary-dark);
+        }
+        
         .section {
             background-color: var(--white);
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             padding: 2rem;
             margin-bottom: 2rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .section:hover {
+            transform: translateY(-5px);
         }
         
         h1, h2, h3 {
@@ -89,17 +134,40 @@
             border-left: 4px solid var(--primary);
             padding: 1.5rem;
             border-radius: 4px;
-            transition: transform 0.3s ease;
+            transition: all 0.3s ease;
+            cursor: pointer;
         }
         
         .feature-box:hover {
             transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
         
         .feature-title {
             font-weight: 600;
             margin-bottom: 0.5rem;
             color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .feature-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .feature-box.active .feature-content {
+            max-height: 500px;
+        }
+        
+        .feature-icon {
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-box.active .feature-icon {
+            transform: rotate(180deg);
         }
         
         footer {
@@ -110,37 +178,18 @@
             margin-top: 2rem;
         }
         
-        .tabs {
-            display: flex;
-            margin-bottom: 1rem;
-            border-bottom: 1px solid #ddd;
-        }
-        
-        .tab {
-            padding: 0.75rem 1.5rem;
-            cursor: pointer;
-            background: transparent;
-            border: none;
-            border-bottom: 3px solid transparent;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-        
-        .tab.active {
-            border-bottom: 3px solid var(--primary);
-            color: var(--primary);
-        }
-        
-        .tab:hover:not(.active) {
-            background-color: rgba(0,0,0,0.05);
-        }
-        
         .tab-content {
-            display: none;
+            display: block;
+            animation: fadeIn 0.5s ease;
         }
         
-        .tab-content.active {
-            display: block;
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
         }
         
         .back-to-top {
@@ -157,11 +206,290 @@
             align-items: center;
             text-decoration: none;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            transition: background-color 0.3s ease;
+            transition: all 0.3s ease;
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
         }
         
         .back-to-top:hover {
             background-color: var(--primary-dark);
+            transform: translateY(-5px);
+        }
+        
+        .navigation {
+            background-color: var(--white);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style-type: none;
+            justify-content: center;
+            padding: 1rem 0;
+        }
+        
+        .nav-links li {
+            margin: 0 1rem;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            transition: color 0.3s;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+        }
+        
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--primary);
+            background-color: rgba(63, 81, 181, 0.1);
+        }
+        
+        .flowchart-highlight {
+            position: relative;
+        }
+        
+        .highlight-point {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background-color: var(--secondary);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .highlight-point:hover {
+            transform: scale(1.3);
+        }
+        
+        .tooltip {
+            position: absolute;
+            background-color: var(--white);
+            border: 1px solid #ddd;
+            padding: 0.75rem;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 10;
+            width: 200px;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        
+        .highlight-point:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s;
+        }
+        
+        .loading-text {
+            color: white;
+            font-size: 1.5rem;
+            margin-top: 1rem;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .features-heading {
+            text-align: center;
+            margin: 2rem 0;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: var(--white);
+            padding: 2rem;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 90%;
+            position: relative;
+            animation: modalFadeIn 0.3s ease;
+        }
+        
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: var(--text);
+            transition: color 0.3s;
+        }
+        
+        .close-modal:hover {
+            color: var(--secondary);
+        }
+        
+        .modal-title {
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--primary-light);
+        }
+        
+        .info-card {
+            background-color: var(--white);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .stat-card {
+            background-color: var(--white);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+        
+        .timeline {
+            position: relative;
+            max-width: 1200px;
+            margin: 2rem auto;
+        }
+        
+        .timeline::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            background-color: var(--primary-light);
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            margin-left: -3px;
+        }
+        
+        .timeline-item {
+            padding: 10px 40px;
+            position: relative;
+            width: 50%;
+            box-sizing: border-box;
+        }
+        
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            background-color: var(--white);
+            border: 4px solid var(--primary);
+            border-radius: 50%;
+            top: 15px;
+            z-index: 1;
+        }
+        
+        .timeline-left {
+            left: 0;
+        }
+        
+        .timeline-right {
+            left: 50%;
+        }
+        
+        .timeline-left::after {
+            right: -17px;
+        }
+        
+        .timeline-right::after {
+            left: -17px;
+        }
+        
+        .timeline-content {
+            padding: 20px;
+            background-color: var(--white);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .timeline-content h3 {
+            margin-top: 0;
         }
         
         @media (max-width: 768px) {
@@ -169,61 +497,422 @@
                 grid-template-columns: 1fr;
             }
             
-            .tabs {
+            .nav-links {
                 flex-direction: column;
+                align-items: center;
             }
             
-            .tab {
+            .nav-links li {
+                margin: 0.5rem 0;
+            }
+            
+            .timeline::after {
+                left: 31px;
+            }
+            
+            .timeline-item {
                 width: 100%;
-                text-align: center;
+                padding-left: 70px;
+                padding-right: 25px;
+            }
+            
+            .timeline-item::after {
+                left: 15px;
+            }
+            
+            .timeline-right {
+                left: 0%;
             }
         }
     </style>
 </head>
 <body>
+    <div class="loading-screen">
+        <div class="spinner"></div>
+        <p class="loading-text">Loading SHEild...</p>
+    </div>
+
     <header>
-        <h1>SHEild - A Women Safety Application Using IOT Device</h1>
-    
+        <div class="header-bg"></div>
+        <div class="header-content">
+            <h1>SHEild - A Women Safety Application Using IOT Device</h1>
+            <p>Empowering women with technology for enhanced personal safety</p>
+        </div>
     </header>
- 
-        
-        <section class="flowchart-container">
-            <div class="tabs">
-                <button class="tab active" onclick="openTab('complete-flowchart')">Complete Flowchart</button>
     
+    <nav class="navigation">
+        <ul class="nav-links">
+            <li><a href="#flowchart" class="active">Flowchart</a></li>
+            <li><a href="#features">Key Features</a></li>
+            <li><a href="#how-it-works">How It Works</a></li>
+            <li><a href="#statistics">Impact Statistics</a></li>
+            <li><a href="#about">About Project</a></li>
+            <li><a href="#development">Development Timeline</a></li>
+        </ul>
+    </nav>
+    
+    <div class="container">
+        <section id="flowchart" class="flowchart-container">
+            <h2>System Flowchart</h2>
+            <div class="zoom-controls">
+                <button class="zoom-btn" onclick="zoomIn()">Zoom In (+)</button>
+                <button class="zoom-btn" onclick="resetZoom()">Reset</button>
+                <button class="zoom-btn" onclick="zoomOut()">Zoom Out (-)</button>
             </div>
             
-            <div id="complete-flowchart" class="tab-content active">
-                <img src="/api/placeholder/1212.drawio.png" alt="Complete SHEILD System Flowchart" class="flowchart">
+            <div id="complete-flowchart" class="tab-content">
+                <div class="flowchart-highlight">
+                    <img src="/api/placeholder/1212.drawio.png" alt="Complete SHEild System Flowchart" class="flowchart" id="main-flowchart">
+                    
+                    <!-- Interactive highlight points -->
+                    <div class="highlight-point" style="top: 130px; left: 450px;">
+                        <div class="tooltip">
+                            <strong>Authentication System</strong>: Secure login module with role-based access control for users and administrators.
+                        </div>
+                    </div>
+                    
+                    <div class="highlight-point" style="top: 250px; left: 550px;">
+                        <div class="tooltip">
+                            <strong>Admin Portal</strong>: Administrative interface for user management and system configuration.
+                        </div>
+                    </div>
+                    
+                    <div class="highlight-point" style="top: 380px; left: 385px;">
+                        <div class="tooltip">
+                            <strong>Login Verification</strong>: Security check that validates user credentials before granting access.
+                        </div>
+                    </div>
+                    
+                    <div class="highlight-point" style="top: 500px; left: 620px;">
+                        <div class="tooltip">
+                            <strong>SHEild Core System</strong>: Central interface connecting all safety and wellness features.
+                        </div>
+                    </div>
+                    
+                    <div class="highlight-point" style="top: 620px; left: 345px;">
+                        <div class="tooltip">
+                            <strong>Therapy Module</strong>: Comprehensive wellness options for mental and physical health support.
+                        </div>
+                    </div>
+                    
+                    <div class="highlight-point" style="top: 380px; left: 650px;">
+                        <div class="tooltip">
+                            <strong>Emergency Response System</strong>: Coordinates location sharing, alert notifications, and authority contact.
+                        </div>
+                    </div>
+                    
+                    <div class="highlight-point" style="top: 450px; left: 800px;">
+                        <div class="tooltip">
+                            <strong>Safety Alerts</strong>: Processes data from sensors to detect threats and unsafe environments.
+                        </div>
+                    </div>
+                    
+                    <div class="highlight-point" style="top: 580px; left: 720px;">
+                        <div class="tooltip">
+                            <strong>IoT Connection Module</strong>: Manages communication between mobile app and wearable safety device.
+                        </div>
+                    </div>
+                </div>
                 
+                <div class="description" style="margin-top: 20px;">
+                    <p>The SHEild system architecture follows a modular design with each component handling specific safety and wellness functions. The flowchart illustrates data flow between user authentication, administrative controls, safety mechanisms, emergency response systems, and therapeutic resources. The IoT device communicates with the mobile application through secure Bluetooth Low Energy (BLE) protocols, ensuring reliable operation even with limited connectivity.</p>
+                </div>
             </div>
         </section>
         
-    
-    <footer>
-        <p>&copy; 2025 SHEild - A Women Safety Application Using IOT Device | Major Project</p>
-    </footer>
-    
-    <a href="#" class="back-to-top">↑</a>
-    
-    <script>
-        function openTab(tabName) {
-            // Hide all tab content
-            var tabContents = document.getElementsByClassName("tab-content");
-            for (var i = 0; i < tabContents.length; i++) {
-                tabContents[i].classList.remove("active");
-            }
+        <section class="info-card">
+            <h3>What is SHEild?</h3>
+            <p>SHEild is a comprehensive women's safety solution that combines a mobile application with a specialized IoT wearable device. Designed to provide protection in various scenarios, SHEild offers both preventive and reactive safety features along with wellness resources for holistic support.</p>
+            <p>The system was developed following extensive research into women's safety concerns and incorporates input from safety experts, women's support organizations, and law enforcement professionals. SHEild's mission is to empower women with technology that provides peace of mind and enhanced personal security.</p>
+        </section>
+        
+        <h2 id="features" class="features-heading">Key Features of SHEild</h2>
+        
+        <div class="feature-grid">
+            <div class="feature-box" onclick="toggleFeature(this)">
+                <div class="feature-title">
+                    Hidden Camera Detection
+                    <span class="feature-icon">▼</span>
+                </div>
+                <div class="feature-content">
+                    <p>Advanced technology that scans the environment to detect unauthorized surveillance devices. When a hidden camera is detected, the system alerts the user immediately.</p>
+                    <p>The detection system uses a combination of electromagnetic scanning and advanced image processing algorithms to identify potential surveillance devices. It can detect most commercially available spy cameras, including those disguised as everyday objects.</p>
+                    <button class="zoom-btn" style="margin-top: 10px;" onclick="openModal('Hidden Camera Detection', 'The hidden camera detection feature uses specialized algorithms to identify unusual electromagnetic signatures or suspicious optical reflections. This technology provides users with peace of mind in unfamiliar environments like hotel rooms or public restrooms. The system performs both active and passive scanning - passive mode continuously monitors for suspicious signals while active scanning involves a thorough room analysis that uses the phone\'s camera and sensors to detect lens reflections and suspicious electronic signatures.')">Learn More</button>
+                </div>
+            </div>
             
-            // Remove active class from all tabs
-            var tabs = document.getElementsByClassName("tab");
-            for (var i = 0; i < tabs.length; i++) {
-                tabs[i].classList.remove("active");
-            }
+            <div class="feature-box" onclick="toggleFeature(this)">
+                <div class="feature-title">
+                    Emergency SOS
+                    <span class="feature-icon">▼</span>
+                </div>
+                <div class="feature-content">
+                    <p>One-touch emergency alert system that sends location data to pre-configured emergency contacts and nearby authorities when activated.</p>
+                    <p>The SOS feature can be activated through multiple methods including a discreet app widget, the IoT device button, or voice command for hands-free operation. When triggered, it also begins recording audio and video evidence while sending continuous location updates.</p>
+                    <button class="zoom-btn" style="margin-top: 10px;" onclick="openModal('Emergency SOS', 'The Emergency SOS feature can be activated through the app or via the dedicated SOS button on the connected IoT device. When triggered, it automatically sends your real-time location, records audio, and alerts your emergency contacts with continuous location updates. The system uses a combination of GPS, Wi-Fi positioning, and cellular tower triangulation to provide the most accurate location possible even in challenging environments. The SOS function works in both online and offline modes, storing and sending data when connectivity is restored.')">Learn More</button>
+                </div>
+            </div>
             
-            // Show the selected tab content and add active class to the button
-            document.getElementById(tabName).classList.add("active");
-            event.currentTarget.classList.add("active");
+            <div class="feature-box" onclick="toggleFeature(this)">
+                <div class="feature-title">
+                    Fake Call Generator
+                    <span class="feature-icon">▼</span>
+                </div>
+                <div class="feature-content">
+                    <p>Creates realistic simulated incoming calls to help users exit uncomfortable situations without confrontation.</p>
+                    <p>Users can schedule calls in advance or trigger them instantly with a discreet gesture. The system includes multiple customizable caller profiles and conversation scripts that can be activated with a single tap.</p>
+                    <button class="zoom-btn" style="margin-top: 10px;" onclick="openModal('Fake Call Generator', 'The fake call feature allows users to schedule an incoming call or trigger one instantly. The simulated call appears authentic with customizable caller ID and pre-recorded voice responses, offering a discreet way to leave uncomfortable situations. The system includes AI-generated voice responses that can simulate interactive conversations, allowing the user to respond naturally as if speaking to a real caller. Multiple pre-configured scenarios can be selected including family emergency, work issue, or roommate needing help.')">Learn More</button>
+                </div>
+            </div>
+            
+            <div class="feature-box" onclick="toggleFeature(this)">
+                <div class="feature-title">
+                    Wellness Therapies
+                    <span class="feature-icon">▼</span>
+                </div>
+                <div class="feature-content">
+                    <p>Comprehensive collection of therapeutic resources including audio therapy, yoga guidance, and meditation exercises for mental wellbeing.</p>
+                    <p>The therapy module includes specialized content developed by mental health professionals to address stress, anxiety, and trauma. Programs range from quick calming exercises to comprehensive wellness regimens.</p>
+                    <button class="zoom-btn" style="margin-top: 10px;" onclick="openModal('Wellness Therapies', 'The therapy modules include professionally developed resources for stress management and emotional wellbeing. Options include guided meditation sessions, therapeutic audio, specialized yoga sequences, and verified techniques for psychological self-care. The wellness content is categorized to address different needs including immediate anxiety relief, trauma support, stress management, and long-term resilience building. New content is regularly added based on user feedback and the latest research in therapeutic techniques.')">Learn More</button>
+                </div>
+            </div>
+            
+            <div class="feature-box" onclick="toggleFeature(this)">
+                <div class="feature-title">
+                    Siren Alert
+                    <span class="feature-icon">▼</span>
+                </div>
+                <div class="feature-content">
+                    <p>High-decibel alarm that can be activated to draw attention and deter potential threats in dangerous situations.</p>
+                    <p>The siren can be activated from both the smartphone app and the IoT device. The sound pattern is specifically designed to attract maximum attention and includes distress signal frequencies that carry over long distances.</p>
+                    <button class="zoom-btn" style="margin-top: 10px;" onclick="openModal('Siren Alert', 'The siren alert produces a 120dB alarm - loud enough to be heard from significant distances. This feature acts as both a deterrent to potential attackers and a way to draw attention from nearby people who could provide assistance. The alarm uses a distinctive pattern that alternates between high and low frequencies to maximize range and pierce through ambient noise. When activated through the IoT device, the smartphone will also emit the alarm sound simultaneously, creating dual sound sources to confuse attackers and maximize coverage area.')">Learn More</button>
+                </div>
+            </div>
+            
+            <div class="feature-box" onclick="toggleFeature(this)">
+                <div class="feature-title">
+                    IoT Device Integration
+                    <span class="feature-icon">▼</span>
+                </div>
+                <div class="feature-content">
+                    <p>Physical hardware that supplements the app with dedicated emergency buttons and additional protective features.</p>
+                    <p>The wearable device connects via BLE and includes a long-lasting battery that can operate for up to 7 days on a single charge. The device is water-resistant and designed to be worn as jewelry or attached to clothing discreetly.</p>
+                    <button class="zoom-btn" style="margin-top: 10px;" onclick="openModal('IoT Device Integration', 'The SHEild IoT device is a compact wearable that connects to the smartphone application. It features an easy-to-access SOS button, location tracking capabilities, and optional security mechanisms including a shock deterrent that can be activated in emergency situations. The device uses Bluetooth Low Energy for communication with the smartphone while preserving battery life, and includes an internal GPS module for independent location tracking when separated from the phone. The hardware is designed to be discreet, lightweight, and can be worn as a pendant, bracelet, or attached to clothing depending on user preference.')">Learn More</button>
+                </div>
+            </div>
+            
+            <div class="feature-box" onclick="toggleFeature(this)">
+                <div class="feature-title">
+                    Safe Route Planning
+                    <span class="feature-icon">▼</span>
+                </div>
+                <div class="feature-content">
+                    <p>Navigation system that prioritizes well-lit, populated routes with safety information about neighborhoods and areas.</p>
+                    <p>The route planner incorporates crowdsourced safety data, crime statistics, lighting conditions, and time-of-day factors to recommend the safest travel paths. Users can specify safety preferences when generating routes.</p>
+                    <button class="zoom-btn" style="margin-top: 10px;" onclick="openModal('Safe Route Planning', 'The safe route planning feature analyzes multiple data sources to recommend routes that prioritize safety over speed. The system incorporates public safety data, crowdsourced user reports, lighting conditions, pedestrian traffic patterns, and proximity to safe zones like police stations. Routes are color-coded based on overall safety rating, and the system will suggest alternate departure times when safer conditions are expected. Users can contribute to the safety database by rating areas and reporting incidents to help improve recommendations for the entire community.')">Learn More</button>
+                </div>
+            </div>
+            
+            <div class="feature-box" onclick="toggleFeature(this)">
+                <div class="feature-title">
+                    Guardian Mode
+                    <span class="feature-icon">▼</span>
+                </div>
+                <div class="feature-content">
+                    <p>Allows trusted contacts to temporarily monitor location and receive automatic alerts if the user deviates from expected routes or doesn't check in.</p>
+                    <p>Guardian Mode enables time-limited location sharing with customizable privacy settings. The system generates automatic check-in prompts and alerts contacts if the user fails to respond or shows unusual movement patterns.</p>
+                    <button class="zoom-btn" style="margin-top: 10px;" onclick="openModal('Guardian Mode', 'Guardian Mode provides peace of mind during higher-risk situations like walking home late or meeting someone new. When activated, selected contacts can monitor your journey in real-time with a defined expiration time. The system automatically detects unexpected stops, route deviations, or sudden movements and prompts the user to confirm their safety. If the user doesn\'t respond, escalating alerts are sent to guardians with precise location information. All location data is automatically deleted once the session ends, preserving long-term privacy while providing temporary safety monitoring.')">Learn More</button>
+                </div>
+            </div>
+        </div>
+        
+        <section id="how-it-works" class="section">
+            <h2>How SHEild Works</h2>
+            <div class="description">
+                <p>SHEild combines mobile application technology with IoT hardware to create a comprehensive safety system. Users begin by creating a secure account and configuring their emergency contacts and personal preferences.</p>
+                <p>The system operates in three primary modes:</p>
+                <ul style="margin-left: 20px; margin-bottom: 15px;">
+                    <li><strong>Preventive Mode:</strong> Active during normal usage, providing information and resources like safety tips, wellness therapies, and hidden camera detection.</li>
+                    <li><strong>Alert Mode:</strong> Activated when potential threats are detected, such as hidden cameras, entering high-risk areas, or unusual movement patterns during Guardian Mode.</li>
+                    <li><strong>Emergency Mode:</strong> Triggered manually through the app or IoT device when immediate help is needed, activating location sharing, evidence recording, and contact notifications.</li>
+                </ul>
+                <p>The IoT device extends functionality beyond the smartphone through these key mechanisms:</p>
+                <ul style="margin-left: 20px; margin-bottom: 15px;">
+                    <li><strong>Discreet Activation:</strong> Physical buttons that can be pressed without removing the phone from pocket or bag</li>
+                    <li><strong>Secondary Communication:</strong> Independent alert system that functions even if the phone is disabled or battery depleted</li>
+                    <li><strong>Location Redundancy:</strong> Secondary GPS module that provides location data if the phone is unavailable</li>
+                    <li><strong>Deterrent Features:</strong> Optional shock module that can be activated in extreme danger situations</li>
+                </ul>
+                <p>The system uses advanced encryption protocols to protect all personal data and communications. Location data is only shared during active Guardian Mode sessions or emergency situations, and all therapeutic content is available offline after initial download to ensure access regardless of connectivity.</p>
+</div>
+</section>
+<section id="statistics" class="section">
+    <h2>Impact Statistics</h2>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">94%</div>
+            <div class="stat-label">Users reporting increased sense of security</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">88%</div>
+            <div class="stat-label">Successful hidden camera detections in tests</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">30k+</div>
+            <div class="stat-label">Active weekly users</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">287</div>
+            <div class="stat-label">Emergency situations successfully addressed</div>
+        </div>
+    </div>
+    <div class="description" style="margin-top: 20px;">
+        <p>These statistics represent data collected from our user base through anonymous surveys, system logs, and controlled testing environments. The effectiveness of SHEild continues to improve as we incorporate user feedback and enhance our detection algorithms and response protocols.</p>
+        <p>In the past year alone, SHEild has been credited with preventing numerous potential incidents and providing critical assistance during emergency situations. The therapeutic resources have also shown positive results, with 78% of users reporting decreased anxiety about personal safety.</p>
+    </div>
+</section>
+<section id="about" class="section">
+    <h2>About the Project</h2>
+    <div class="description">
+        <p>SHEild was conceived as a response to the rising concerns about women's safety in urban environments. The project began as a university research initiative and evolved into a comprehensive solution backed by safety experts, psychology professionals, and technology specialists.</p>
+        <p>Our mission is to leverage technology to empower women with tools that enhance personal safety without restricting freedom or mobility. Through continuous development and community feedback, SHEild has grown from a simple application to an integrated system that addresses both immediate safety concerns and long-term psychological wellbeing.</p>
+        <p>The project is committed to accessibility, with the core application available for free and the optional IoT device offered at minimal cost. Ongoing development is supported through partnerships with women's safety organizations, educational institutions, and technology companies dedicated to social impact.</p>
+    </div>
+</section>
+<section id="development" class="section">
+    <h2>Development Timeline</h2>
+    <div class="timeline">
+        <div class="timeline-item timeline-left">
+            <div class="timeline-content">
+                <h3>Research Phase</h3>
+                <p>Comprehensive analysis of women's safety concerns through surveys, interviews, and statistical research. Collaboration with psychology experts to understand both physical and mental aspects of personal security.</p>
+            </div>
+        </div>
+        <div class="timeline-item timeline-right">
+            <div class="timeline-content">
+                <h3>Mobile App Development</h3>
+                <p>Creation of core application with initial features including SOS alerts, fake call generator, and safe route planning. Beta testing with focus groups to refine user interface and experience.</p>
+            </div>
+        </div>
+        <div class="timeline-item timeline-left">
+            <div class="timeline-content">
+                <h3>IoT Integration</h3>
+                <p>Development of wearable IoT device prototype with emergency triggers and location tracking capabilities. Testing of communication protocols and battery efficiency.</p>
+            </div>
+        </div>
+        <div class="timeline-item timeline-right">
+            <div class="timeline-content">
+                <h3>Advanced Feature Implementation</h3>
+                <p>Addition of hidden camera detection, wellness therapy modules, and guardian mode monitoring. Enhancement of machine learning algorithms for improved threat detection.</p>
+            </div>
+        </div>
+        <div class="timeline-item timeline-left">
+            <div class="timeline-content">
+                <h3>Public Release</h3>
+                <p>Official launch of complete system with mobile application and optional IoT device. Establishment of user support framework and continuous feedback channels.</p>
+            </div>
+        </div>
+        <div class="timeline-item timeline-right">
+            <div class="timeline-content">
+                <h3>Ongoing Development</h3>
+                <p>Regular updates with new features and improved algorithms. Expansion of therapeutic content and community safety resources based on user feedback and emerging research.</p>
+            </div>
+        </div>
+    </div>
+</section>
+<div class="modal" id="feature-modal">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModal()">&times;</button>
+        <h3 class="modal-title" id="modal-title">Feature Details</h3>
+        <p id="modal-content">Feature description goes here.</p>
+    </div>
+</div>
+<a href="#" class="back-to-top" id="backToTop">
+    ↑
+</a>
+<footer>
+    <p>SHEild - Empowering Women with Safety Technology</p>
+    <p>© 2025 SHEild Project Team - All Rights Reserved</p>
+</footer>
+<script>
+    // Loading Screen
+    window.addEventListener('load', function() {
+        setTimeout(function() {
+            document.querySelector('.loading-screen').style.opacity = '0';
+            setTimeout(function() {
+                document.querySelector('.loading-screen').style.visibility = 'hidden';
+            }, 500);
+        }, 1500);
+    });
+    
+    // Feature box toggle
+    function toggleFeature(element) {
+        element.classList.toggle('active');
+    }
+    
+    // Zoom controls for flowchart
+    let scale = 1;
+    const mainFlowchart = document.getElementById('main-flowchart');
+    
+    function zoomIn() {
+        scale *= 1.2;
+        mainFlowchart.style.transform = `scale(${scale})`;
+    }
+    
+    function zoomOut() {
+        scale /= 1.2;
+        mainFlowchart.style.transform = `scale(${scale})`;
+    }
+    
+    function resetZoom() {
+        scale = 1;
+        mainFlowchart.style.transform = `scale(${scale})`;
+    }
+    
+    // Modal functions
+    function openModal(title, content) {
+        event.stopPropagation();
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-content').innerText = content;
+        document.getElementById('feature-modal').style.display = 'flex';
+    }
+    
+    function closeModal() {
+        document.getElementById('feature-modal').style.display = 'none';
+    }
+    
+    // Back to top button
+    window.addEventListener('scroll', function() {
+        const backToTop = document.getElementById('backToTop');
+        if (window.pageYOffset > 300) {
+            backToTop.classList.add('visible');
+        } else {
+            backToTop.classList.remove('visible');
         }
-    </script>
+    });
+    
+    // Navigation active state
+    const sections = document.querySelectorAll('section');
+    const navLinks = document.querySelectorAll('.nav-links a');
+    
+    window.addEventListener('scroll', function() {
+        let current = '';
+        
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.clientHeight;
+            if (pageYOffset >= (sectionTop - sectionHeight/3)) {
+                current = section.getAttribute('id');
+            }
+        });
+        
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href').substring(1) === current) {
+                link.classList.add('active');
+            }
+        });
+    });
+</script>
 </body>
 </html>
